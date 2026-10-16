@@ -1,0 +1,63 @@
+name: support-pi
+
+###
+### Networks
+###
+
+networks:
+  ingress:
+    driver: bridge
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+  database:
+    driver: bridge
+
+
+###
+### Include
+###
+
+include:
+  - path: ./docker/data.yml
+  - path: ./docker/crm.yml
+  - path: ./docker/home.yml
+
+###
+### Services
+###
+
+services:
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-support-pi-tunnel
+    hostname: cloudflare-support-pi-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/cloudflare/hosts:/etc/hosts
+    environment:
+      - 'TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}'
+    networks:
+      - ingress
+    healthcheck:
+      test: ['CMD', 'cloudflared', '--version']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  dockhand:
+    image: fnsys/dockhand:latest
+    container_name: dockhand
+    restart: unless-stopped
+    networks:
+      - ingress
+      - frontend
+    ports:
+      - 3000:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
