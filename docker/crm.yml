@@ -10,7 +10,8 @@ services:
       - backend
     volumes:
       - crm-server-local-data:/app/packages/twenty-server/.local-storage
-      - ${BACKUP_DIR}/crm/server:/backup
+      - ../backups/crm/server:/backup
+      - ../logs/crm/server:/var/log/
     ports:
       - ${CRM_SERVER_PORT}:3000
     environment:
@@ -75,7 +76,7 @@ services:
     restart: unless-stopped
 
   crm_db:
-    image: postgres:17-bookworm
+    image: postgres:17-trixie
     container_name: crm_db
     restart: unless-stopped
     networks:
@@ -83,6 +84,8 @@ services:
     volumes:
       - crm_db:/var/lib/postgresql/data
       - ../migrations:/app/migrations
+      - ../logs/crm/db:/var/log/
+      - ../backups/crm/db:/backups
     environment:
       POSTGRES_DB: crm
       POSTGRES_PASSWORD: ${CRM_DATABASE_PASSWORD}

@@ -1,0 +1,46 @@
+# This is the recommended way of running Baserow using docker-compose for most users.
+# See https://baserow.io/docs/installation%2Finstall-with-docker for more details.
+services:
+  baserow:
+    container_name: baserow
+    restart: unless-stopped
+    networks:
+      - database
+      - frontend
+      - ingress
+    image: baserow/baserow:${BASEROW_VERSION:-2.4.1}
+    environment:
+      BASEROW_PUBLIC_URL: 'https://data.${DOMAIN}'
+      BASEROW_FRONTEND_COOKIE_PREFIX:
+    ports:
+      - ${BASEROW_PORT}:80
+      - ${BASEROW_PORT_HTTPS}:443
+    volumes:
+      - baserow_data:/baserow/data
+      - ../logs/baserow:/var/log/
+      - ../backups/baserow:/backups
+
+  data_db:
+    image: postgres:18-trixie
+    container_name: data_db
+    restart: unless-stopped
+    networks:
+      - database
+    volumes:
+      - data_db:/var/lib/postgresql/data
+      - ../migrations:/app/migrations
+      - ../logs/data/db:/var/log/
+      - ../backups/data/db:/backups
+    environment:
+      POSTGRES_DB: data
+      POSTGRES_PASSWORD: ${DATA_DATABASE_PASSWORD}
+      POSTGRES_USER: data
+    healthcheck:
+      test: pg_isready -U data -h localhost -d data
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  baserow_data:
+  data_db:
