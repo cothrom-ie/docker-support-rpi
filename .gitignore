@@ -2,6 +2,8 @@
 # OPERATING SYSTEM FILES
 # =============================================================================
 
+migrations/*
+
 # macOS
 .DS_Store
 .DS_Store?

@@ -21,7 +21,6 @@ networks:
 
 include:
   - path: ./docker/data.yml
-  - path: ./docker/crm.yml
   - path: ./docker/n8n.yml
 
 ###
@@ -38,7 +37,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./config/cloudflare/hosts:/etc/hosts
-      - ./logs/cloudflare:/var/log/cloudflared
       - ./backups/cloudflare:/backups
     environment:
       - 'TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}'
@@ -63,31 +61,26 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - dockhand_data:/app/data
-      - ./logs/dockhand:/var/log/
       - ./backups/dockhand:/app/backups
 
-  dashy:
-    image: lissy93/dashy:latest
-    container_name: dashy
+  glance:
+    container_name: glance
+    image: glanceapp/glance
+    restart: unless-stopped
     user: "1000:1000"
-    ports:
-      - ${DASHY_PORT}:8080
     networks:
       - ingress
       - frontend
-    volumes:
-      - ./config/dashy/:/app/user-data
-      - ./logs/dashy:/var/log/
-      - ./backups/dashy:/app/backups
     environment:
-      - NODE_ENV=production
-    restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'node', '/app/services/healthcheck.js']
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      - DOCKHAND_URL=http://dockhand:3000
+      - DOCKHAND_API_TOKEN=${DOCKHAND_API_TOKEN}
+      - DOCKHAND_ENV_ID=${DOCKHAND_ENV_ID_1}
+    volumes:
+      - ./config/glance/config:/app/config
+      - ./config/glance/assets:/app/assets
+      - ./backups/glance:/app/backups
+    ports:
+      - ${GLANCE_PORT}:8080
 
 volumes:
   dockhand_data:

@@ -32,3 +32,7 @@ logs *SERVICE:
 # Print resolved Compose config
 config:
     docker compose config
+
+# Restore Twenty CRM DB from migrations dump (destructive)
+restore-crm *ARGS:
+    ./scripts/restore-crm-db.sh {{ARGS}}
